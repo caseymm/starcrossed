@@ -5,14 +5,18 @@ $break-width: 500px;
 body {
   margin: 0;
   padding: 0;
-  background-color: #a716e5;
+  background-color: #F8E0FF;
   font-family: 'Work Sans', sans-serif;
-  color: #fff;
+  color: #5C00E6;
   font-size: 18px;
 }
 
 a{
-  color: #fff;
+  color: #5C00E6;
+}
+
+h2{
+  font-size: 20px;
 }
 
 .admin-nav{
@@ -51,12 +55,12 @@ h1{
 
 input{
   background-color: rgba(0,0,0,0);
-  border: 0px solid #42f489;
+  border: 0px solid #5C00E6;
   border-bottom-width: 5px;
   -webkit-appearance: none;
   border-radius: 0px;
   font-size: 40px;
-  color: #fff;
+  color: #5C00E6;
   font-family: 'Work Sans', sans-serif;
   font-weight: 500;
   display: block;
@@ -106,14 +110,14 @@ input{
 
 #submit{
   border-width: 0px;
-  background-color: #42f489;
-  font-size: 18px;
-  padding: 6px 5px;
+  background-color: #F8E0FF;
+  border: 2px solid #5C00E6;
+  font-size: 20px;
+  padding: 10px 12px;
   display: block;
   cursor: pointer;
   width: auto;
-  color: #000;
-  border-bottom-width: 0px;
+  color: #5C00E6;
   clear: both;
   margin: auto;
 }
@@ -121,6 +125,7 @@ input{
 .results{
   max-width: 600px;
   margin: auto;
+  padding: 10px;
 }
 
 ul{
@@ -128,11 +133,13 @@ ul{
   padding-left: 0px;
   li{
     h2{
-      font-size: 22px;
       display: inline;
     }
     &.movie, &.tv, &.actor{
       margin-bottom: 20px;
+      &.sub{
+        margin-bottom: 0px;
+      }
     }
     &.movie{
       &:before{
@@ -181,7 +188,7 @@ ul{
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #fff;
+    background: #5C00E6;
     animation-timing-function: cubic-bezier(0, 1, 1, 0);
   }
   .lds-ellipsis div:nth-child(1) {

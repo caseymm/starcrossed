@@ -11,9 +11,9 @@ let resp = {
 
 const Loader = () => {
   return(
-    <div class="loader">
+    <div className="loader">
       <span>loading</span>
-      <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+      <div className="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
     </div>
   )
 }
@@ -95,7 +95,7 @@ const MatchingItemsTitles = () => {
   })
   return(
     <div>
-      <h2>These actors appeared in {resp.title1.title} and {resp.title2.title}</h2>
+      <h2>These actors appeared in {resp.title1.title} and {resp.title2.title}:</h2>
       <ul>{mapped}</ul>
     </div>
   )
@@ -145,7 +145,7 @@ const TitleForm = (props) => {
           <input type="text" className="acting" ref={title2} />
           {/* <span class="del">✕</span> */}
         </div>  
-        <button id="submit" type="submit">🔮 submit 🔮</button>
+        <button id="submit" type="submit">compare</button>
       </form>
       {!found1 && !found2 && !newItem &&
         <Loader />
@@ -171,8 +171,8 @@ const MatchingItems = () => {
     <li key={id} className={getType(a1matches.find(d => d.id === id).description)}>
     <Title movie={a1matches.find(d => d.id === id)} />
       <ul>
-        <li key={`${resp.actor1.name}-${id}`}>{resp.actor1.name} as <FormatRoles roles={a1matches.find(d => d.id === id).description} /></li>
-        <li key={`${resp.actor2.name}-${id}`}>{resp.actor2.name} as <FormatRoles roles={a2matches.find(d => d.id === id).description} /></li>
+        <li className="actor sub" key={`${resp.actor1.name}-${id}`}>{resp.actor1.name} as <FormatRoles roles={a1matches.find(d => d.id === id).description} /></li>
+        <li className="actor sub" key={`${resp.actor2.name}-${id}`}>{resp.actor2.name} as <FormatRoles roles={a2matches.find(d => d.id === id).description} /></li>
       </ul>
     </li>
     
@@ -230,7 +230,7 @@ const ActorForm = (props) => {
           <input type="text" className="acting" ref={actor2} />
           {/* <span class="del">✕</span> */}
         </div>  
-        <button id="submit" type="submit">🔮 submit 🔮</button>
+        <button id="submit" type="submit">compare</button>
       </form>
       {!found1 && !found2 && !newItem &&
         <Loader />
