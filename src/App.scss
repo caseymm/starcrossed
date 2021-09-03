@@ -1,18 +1,23 @@
 @import url('https://fonts.googleapis.com/css?family=Work+Sans:400,500,700,900');
 
 $break-width: 500px;
+$purple: #5C00E6;
 
 body {
   margin: 0;
   padding: 0;
   background-color: #F8E0FF;
   font-family: 'Work Sans', sans-serif;
-  color: #5C00E6;
+  color: $purple;
   font-size: 18px;
 }
 
+::placeholder {
+  color: lighten($purple, 20%);
+}
+
 a{
-  color: #5C00E6;
+  color: $purple;
 }
 
 h2{
@@ -55,12 +60,12 @@ h1{
 
 input{
   background-color: rgba(0,0,0,0);
-  border: 0px solid #5C00E6;
+  border: 0px solid $purple;
   border-bottom-width: 5px;
   -webkit-appearance: none;
   border-radius: 0px;
   font-size: 40px;
-  color: #5C00E6;
+  color: $purple;
   font-family: 'Work Sans', sans-serif;
   font-weight: 500;
   display: block;
@@ -111,13 +116,13 @@ input{
 #submit{
   border-width: 0px;
   background-color: #F8E0FF;
-  border: 2px solid #5C00E6;
+  border: 2px solid $purple;
   font-size: 20px;
   padding: 10px 12px;
   display: block;
   cursor: pointer;
   width: auto;
-  color: #5C00E6;
+  color: $purple;
   clear: both;
   margin: auto;
 }

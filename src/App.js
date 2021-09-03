@@ -95,7 +95,12 @@ const MatchingItemsTitles = () => {
   })
   return(
     <div>
+    {intersection.length > 0 &&
       <h2>These actors appeared in {resp.title1.title} and {resp.title2.title}:</h2>
+    }
+    {intersection.length === 0 &&
+      <h2>{resp.title1.title} and {resp.title2.title} do not share any actors.</h2>
+    }
       <ul>{mapped}</ul>
     </div>
   )
@@ -137,12 +142,12 @@ const TitleForm = (props) => {
     <div>
       <form id="findMovies" onSubmit={handleSubmit}>
         <div className="input-wrapper show-ex">
-          <input type="text" className="acting" ref={title1} />
+          <input type="text" className="acting" placeholder="Title" ref={title1} />
           {/* <span class="del">✕</span> */}
         </div> 
         <div className="ex">&</div>
         <div className="input-wrapper show-ex">
-          <input type="text" className="acting" ref={title2} />
+          <input type="text" className="acting" placeholder="Title" ref={title2} />
           {/* <span class="del">✕</span> */}
         </div>  
         <button id="submit" type="submit">compare</button>
@@ -167,6 +172,7 @@ const MatchingItems = () => {
   const intersection = a1ids.filter(element => a2ids.includes(element));
   let a1matches = a1Roles.filter(d => intersection.includes(d.id));
   let a2matches = a2Roles.filter(d => intersection.includes(d.id));
+
   const items = intersection.map(id => 
     <li key={id} className={getType(a1matches.find(d => d.id === id).description)}>
     <Title movie={a1matches.find(d => d.id === id)} />
@@ -175,11 +181,15 @@ const MatchingItems = () => {
         <li className="actor sub" key={`${resp.actor2.name}-${id}`}>{resp.actor2.name} as <FormatRoles roles={a2matches.find(d => d.id === id).description} /></li>
       </ul>
     </li>
-    
   )
   return(
     <div>
+    {a1matches.length > 0 &&
       <p>{resp.actor1.name} and {resp.actor2.name} have both appeared in:</p>
+    }
+    {a1matches.length === 0 &&
+      <p>{resp.actor1.name} and {resp.actor2.name} have never appeared together.</p>
+    }
       <ul>
         {items}
       </ul>
@@ -222,12 +232,12 @@ const ActorForm = (props) => {
     <div>
       <form id="findActors" onSubmit={handleSubmit}>
         <div className="input-wrapper show-ex">
-          <input type="text" className="acting" ref={actor1} />
+          <input type="text" className="acting" placeholder="Actor Name" ref={actor1} />
           {/* <span class="del">✕</span> */}
         </div> 
         <div className="ex">&</div>
         <div className="input-wrapper show-ex">
-          <input type="text" className="acting" ref={actor2} />
+          <input type="text" className="acting" placeholder="Actor Name" ref={actor2} />
           {/* <span class="del">✕</span> */}
         </div>  
         <button id="submit" type="submit">compare</button>
