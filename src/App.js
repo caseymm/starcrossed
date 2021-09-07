@@ -18,6 +18,20 @@ const Loader = () => {
   )
 }
 
+const handleChange = (input) => {
+  if(input.current.value.length > 0){
+    input.current.nextElementSibling.className = 'del show-ex'
+  } else {
+    input.current.nextElementSibling.className = 'del'
+  }
+}
+
+const clearInput = (ref, num) => {
+  ref.current.value = '';
+  ref.current.focus();
+  handleChange(ref)
+}
+
 async function fetchData(base, name){
   const urlStr = `${base}/${apiKey}/${name}`;
   const requestOptions = {
@@ -49,16 +63,16 @@ const Title = (props) => {
 }
 
 const FormatRoles = (props) => {
-  if(props.roles.match(/TV Series/g)){
-    let roles = props.roles.split(' - ');
-    roles.shift();
-    const items = roles.map((role, idx) =>
-      <li key={idx}>{role}</li>
-    )
+  if(props.roles.match(/\(TV /g) || props.roles.match(/\(Video\)/g)){
+    let role = props.roles.split(' - ')[0].split(') ')[1];
+    try{
+      role = role.replace('(Video) ', '');
+      role = role.replace('...', 'more...');
+    } catch(err){
+      console.log(err);
+    }
     return(
-      <ul>
-        {items}
-      </ul>
+      <span>{role}</span>
     )
   } else {
     return(
@@ -68,14 +82,27 @@ const FormatRoles = (props) => {
 }
 
 const getType = (title) => {
-  if(title.match(/TV Series/g)){
+  if(title.match(/\(TV /g)){
     return 'tv';
   } else {
     return 'movie';
   }
 }
 
+const formatRole = (role, title) => {
+  if(role.match(/episode/g)){
+    const roleArray = role.split(/\s\d+\sepisode[s]?,\s/gm);
+    role = `${roleArray[0].replace('...', 'more...')} in ${title} (${roleArray[1]})`;
+  } else {
+    role = `${role} in ${title}`;
+  }
+  return role;
+}
+
 const MatchingItemsTitles = () => {
+  if(resp.title1.length === 0 && resp.title2.length === 0){
+    return(<p>Unable to find a match. Make sure you've selected the right tab up top.</p>)
+  }
   let title1ids = resp.title1.actors.map(d => d.id);
   let title2ids = resp.title2.actors.map(d => d.id);
   const intersection = title1ids.filter(element => title2ids.includes(element));
@@ -85,13 +112,21 @@ const MatchingItemsTitles = () => {
     let role = [actor.asCharacter, actorB.asCharacter];
     if(role[0] === role[1]){
       role = actor.asCharacter;
+      return(
+        <li className="actor" key={id}>
+        <a href={`https://www.imdb.com/name/${actor.id}`}>{actor.name}</a> as {role}</li>
+      )
     } else {
-      role = `${role[0]} and ${role[1]}`
+      return(
+        <li className="actor" key={id}>
+          <a href={`https://www.imdb.com/name/${actor.id}`}>{actor.name}</a> as
+          <ul className="role-sublist">
+            <li>{formatRole(role[0], resp.title1.title)}</li>
+            <li>{formatRole(role[1], resp.title2.title)}</li>
+          </ul>
+        </li>
+      )
     }
-    return(
-      <li className="actor" key={id}>
-      <a href={`https://www.imdb.com/name/${actor.id}`}>{actor.name}</a> as {role}</li>
-    )
   })
   return(
     <div>
@@ -99,7 +134,10 @@ const MatchingItemsTitles = () => {
       <h2>These actors appeared in {resp.title1.title} and {resp.title2.title}:</h2>
     }
     {intersection.length === 0 &&
-      <h2>{resp.title1.title} and {resp.title2.title} do not share any actors.</h2>
+      <div>
+        <h2>{resp.title1.title} and {resp.title2.title} do not share any actors.</h2>
+        <p>Something seem off? Make sure you've selected the right tab up top.</p>
+      </div>
     }
       <ul>{mapped}</ul>
     </div>
@@ -121,34 +159,42 @@ const TitleForm = (props) => {
     // console.log('submit', title1.current.value, title2.current.value)
     const title1Search = fetchData('https://imdb-api.com/en/API/SearchTitle/', title1.current.value);
     title1Search.then(data => {
-      const title1ID = data.results[0].id;
-      const title1Values = fetchData('https://imdb-api.com/en/API/FullCast/', title1ID).then(data => {
-        resp.title1 = data;
-        setFound1(true);
-      })
+      try{
+        const title1ID = data.results[0].id;
+        const title1Values = fetchData('https://imdb-api.com/en/API/FullCast/', title1ID).then(data => {
+          resp.title1 = data;
+        })
+      } catch(err){
+        resp.title1 = '';
+      }
+      setFound1(true);
     })
 
     const title2Search = fetchData('https://imdb-api.com/en/API/SearchTitle/', title2.current.value);
     title2Search.then(data => {
-      const title2ID = data.results[0].id;
-      const title2Values = fetchData('https://imdb-api.com/en/API/FullCast/', title2ID).then(data => {
-        resp.title2 = data;
-        setFound2(true);
-      })
+      try{
+        const title2ID = data.results[0].id;
+        const title2Values = fetchData('https://imdb-api.com/en/API/FullCast/', title2ID).then(data => {
+          resp.title2 = data;
+        })
+      } catch(err){
+        resp.title2 = '';
+      }
+      setFound2(true);
     })
   }
 
   return(
     <div>
       <form id="findMovies" onSubmit={handleSubmit}>
-        <div className="input-wrapper show-ex">
+        <div className="input-wrapper" onChange={() => handleChange(title1)}>
           <input type="text" className="acting" placeholder="Title" ref={title1} />
-          {/* <span class="del">✕</span> */}
+          <span className='del' onClick={() => clearInput(title1)}>✕</span>
         </div> 
         <div className="ex">&</div>
-        <div className="input-wrapper show-ex">
+        <div className="input-wrapper" onChange={() => handleChange(title2)}>
           <input type="text" className="acting" placeholder="Title" ref={title2} />
-          {/* <span class="del">✕</span> */}
+          <span className='del' onClick={() => clearInput(title2)}>✕</span>
         </div>  
         <button id="submit" type="submit">compare</button>
       </form>
@@ -185,10 +231,13 @@ const MatchingItems = () => {
   return(
     <div>
     {a1matches.length > 0 &&
-      <p>{resp.actor1.name} and {resp.actor2.name} have both appeared in:</p>
+      <h2>{resp.actor1.name} and {resp.actor2.name} have both appeared in:</h2>
     }
     {a1matches.length === 0 &&
-      <p>{resp.actor1.name} and {resp.actor2.name} have never appeared together.</p>
+      <div>
+        <h2>{resp.actor1.name} and {resp.actor2.name} have never appeared together.</h2>
+        <p>Something seem off? Make sure you've selected the right tab up top.</p>
+      </div>
     }
       <ul>
         {items}
@@ -231,14 +280,14 @@ const ActorForm = (props) => {
   return(
     <div>
       <form id="findActors" onSubmit={handleSubmit}>
-        <div className="input-wrapper show-ex">
+        <div className="input-wrapper" onChange={() => handleChange(actor1)}>
           <input type="text" className="acting" placeholder="Actor Name" ref={actor1} />
-          {/* <span class="del">✕</span> */}
+          <span className="del" onClick={() => clearInput(actor1)}>✕</span>
         </div> 
         <div className="ex">&</div>
-        <div className="input-wrapper show-ex">
+        <div className="input-wrapper" onChange={() => handleChange(actor2)}>
           <input type="text" className="acting" placeholder="Actor Name" ref={actor2} />
-          {/* <span class="del">✕</span> */}
+          <span className="del" onClick={() => clearInput(actor2)}>✕</span>
         </div>  
         <button id="submit" type="submit">compare</button>
       </form>
