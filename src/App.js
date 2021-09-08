@@ -159,28 +159,29 @@ const TitleForm = (props) => {
     // console.log('submit', title1.current.value, title2.current.value)
     const title1Search = fetchData('https://imdb-api.com/en/API/SearchTitle/', title1.current.value);
     title1Search.then(data => {
-      try{
-        const title1ID = data.results[0].id;
-        const title1Values = fetchData('https://imdb-api.com/en/API/FullCast/', title1ID).then(data => {
+      const title1ID = data.results[0].id;
+      const title1Values = fetchData('https://imdb-api.com/en/API/FullCast/', title1ID).then(data => {
+        if(data){
           resp.title1 = data;
-        })
-      } catch(err){
-        resp.title1 = '';
-      }
-      setFound1(true);
+        } else {
+          resp.title1 = '';
+        }
+        setFound1(true);
+      })
     })
 
     const title2Search = fetchData('https://imdb-api.com/en/API/SearchTitle/', title2.current.value);
     title2Search.then(data => {
-      try{
-        const title2ID = data.results[0].id;
-        const title2Values = fetchData('https://imdb-api.com/en/API/FullCast/', title2ID).then(data => {
+      
+      const title2ID = data.results[0].id;
+      const title2Values = fetchData('https://imdb-api.com/en/API/FullCast/', title2ID).then(data => {
+        if(data){
           resp.title2 = data;
-        })
-      } catch(err){
-        resp.title2 = '';
-      }
-      setFound2(true);
+        } else {
+          resp.title2 = '';
+        }
+        setFound2(true);
+      })
     })
   }
 
