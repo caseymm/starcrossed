@@ -157,10 +157,10 @@ const TitleForm = (props) => {
     setFound1(false);
     setFound2(false);
     // console.log('submit', title1.current.value, title2.current.value)
-    const title1Search = fetchData('https://imdb-api.com/en/API/SearchTitle/', title1.current.value);
+    const title1Search = fetchData('https://imdb-api.com/en/API/SearchTitle', title1.current.value);
     title1Search.then(data => {
       const title1ID = data.results[0].id;
-      const title1Values = fetchData('https://imdb-api.com/en/API/FullCast/', title1ID).then(data => {
+      const title1Values = fetchData('https://imdb-api.com/en/API/FullCast', title1ID).then(data => {
         if(data){
           resp.title1 = data;
         } else {
@@ -170,11 +170,11 @@ const TitleForm = (props) => {
       })
     })
 
-    const title2Search = fetchData('https://imdb-api.com/en/API/SearchTitle/', title2.current.value);
+    const title2Search = fetchData('https://imdb-api.com/en/API/SearchTitle', title2.current.value);
     title2Search.then(data => {
       
       const title2ID = data.results[0].id;
-      const title2Values = fetchData('https://imdb-api.com/en/API/FullCast/', title2ID).then(data => {
+      const title2Values = fetchData('https://imdb-api.com/en/API/FullCast', title2ID).then(data => {
         if(data){
           resp.title2 = data;
         } else {
@@ -262,7 +262,7 @@ const ActorForm = (props) => {
     const actor1Search = fetchData('https://imdb-api.com/en/API/SearchName', actor1.current.value);
     actor1Search.then(data => {
       const actor1ID = data.results[0].id;
-      const actor1Values = fetchData('https://imdb-api.com/en/API/Name/', actor1ID).then(data => {
+      const actor1Values = fetchData('https://imdb-api.com/en/API/Name', actor1ID).then(data => {
         resp.actor1 = data;
         setFound1(true);
       })
@@ -271,7 +271,8 @@ const ActorForm = (props) => {
     const actor2Search = fetchData('https://imdb-api.com/en/API/SearchName', actor2.current.value);
     actor2Search.then(data => {
       const actor2ID = data.results[0].id;
-      const actor2Values = fetchData('https://imdb-api.com/en/API/Name/', actor2ID).then(data => {
+      console.log(actor2ID)
+      const actor2Values = fetchData('https://imdb-api.com/en/API/Name', actor2ID).then(data => {
         resp.actor2 = data;
         setFound2(true);
       })
