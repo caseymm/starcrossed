@@ -1,5 +1,6 @@
 import React, { useState, useRef, Component } from 'react';
 import './App.scss';
+import stringSimilarity from 'string-similarity';
 
 const apiKey = 'k_l56508qd';
 let resp = {
@@ -247,6 +248,19 @@ const MatchingItems = () => {
   )
 }
 
+const getSimilarity = (nameValue, returnedName) => {
+  return stringSimilarity.compareTwoStrings(nameValue, returnedName);
+}
+
+const getMostSimilarId = (actorName, array) => {
+  array.forEach(item => {
+    item.similarity = getSimilarity(actorName.toLowerCase(), item.title.toLowerCase())
+  }).sort((a, b) => {
+    return b.similarity - a.similarity;
+  });
+  return array[0].id;
+}
+
 const ActorForm = (props) => {
   const [found1, setFound1] = useState(false);
   const [found2, setFound2] = useState(false);
@@ -261,7 +275,7 @@ const ActorForm = (props) => {
     setFound2(false);
     const actor1Search = fetchData('https://imdb-api.com/en/API/SearchName', actor1.current.value);
     actor1Search.then(data => {
-      const actor1ID = data.results[0].id;
+      const actor1ID = getMostSimilarId(actor1.current.value, data.results);
       const actor1Values = fetchData('https://imdb-api.com/en/API/Name', actor1ID).then(data => {
         resp.actor1 = data;
         setFound1(true);
@@ -270,7 +284,7 @@ const ActorForm = (props) => {
 
     const actor2Search = fetchData('https://imdb-api.com/en/API/SearchName', actor2.current.value);
     actor2Search.then(data => {
-      const actor2ID = data.results[0].id;
+      const actor2ID = getMostSimilarId(actor2.current.value, data.results);
       console.log(actor2ID)
       const actor2Values = fetchData('https://imdb-api.com/en/API/Name', actor2ID).then(data => {
         resp.actor2 = data;
