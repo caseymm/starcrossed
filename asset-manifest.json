@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/starcrossed/static/css/main.b0f49d8e.chunk.css",
-    "main.js": "/starcrossed/static/js/main.d62ce6ab.chunk.js",
-    "main.js.map": "/starcrossed/static/js/main.d62ce6ab.chunk.js.map",
+    "main.js": "/starcrossed/static/js/main.63f47f15.chunk.js",
+    "main.js.map": "/starcrossed/static/js/main.63f47f15.chunk.js.map",
     "runtime-main.js": "/starcrossed/static/js/runtime-main.e0bad0ba.js",
     "runtime-main.js.map": "/starcrossed/static/js/runtime-main.e0bad0ba.js.map",
     "static/js/2.953bcf6a.chunk.js": "/starcrossed/static/js/2.953bcf6a.chunk.js",
@@ -12,12 +12,12 @@
     "index.html": "/starcrossed/index.html",
     "static/css/main.b0f49d8e.chunk.css.map": "/starcrossed/static/css/main.b0f49d8e.chunk.css.map",
     "static/js/2.953bcf6a.chunk.js.LICENSE.txt": "/starcrossed/static/js/2.953bcf6a.chunk.js.LICENSE.txt",
-    "static/js/main.d62ce6ab.chunk.js.LICENSE.txt": "/starcrossed/static/js/main.d62ce6ab.chunk.js.LICENSE.txt"
+    "static/js/main.63f47f15.chunk.js.LICENSE.txt": "/starcrossed/static/js/main.63f47f15.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.e0bad0ba.js",
     "static/js/2.953bcf6a.chunk.js",
     "static/css/main.b0f49d8e.chunk.css",
-    "static/js/main.d62ce6ab.chunk.js"
+    "static/js/main.63f47f15.chunk.js"
   ]
 }
