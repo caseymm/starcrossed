@@ -255,7 +255,8 @@ const getSimilarity = (nameValue, returnedName) => {
 const getMostSimilarId = (actorName, array) => {
   array.forEach(item => {
     item.similarity = getSimilarity(actorName.toLowerCase(), item.title.toLowerCase())
-  }).sort((a, b) => {
+  });
+  array.sort((a, b) => {
     return b.similarity - a.similarity;
   });
   return array[0].id;
