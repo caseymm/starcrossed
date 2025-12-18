@@ -2,7 +2,10 @@ import React, { useState, useRef, Component } from 'react';
 import './App.scss';
 import stringSimilarity from 'string-similarity';
 
-const apiKey = 'k_l56508qd';
+// Use imdbapi.dev API through proxy
+const IMDB_API_BASE = 'https://api.imdbapi.dev';
+const PROXY_URL = process.env.REACT_APP_PROXY_URL || '/api/proxy';
+
 let resp = {
   actor1: [],
   actor2: [],
@@ -33,19 +36,167 @@ const clearInput = (ref, num) => {
   handleChange(ref)
 }
 
-async function fetchData(base, name){
-  const urlStr = `${base}/${apiKey}/${name}`;
+async function searchIMDb(query){
+  console.log('🔍 Searching IMDb for:', query);
+  const urlStr = `https://search.imdbot.workers.dev/?q=${encodeURIComponent(query)}`;
   const requestOptions = {
     method: 'GET',
     redirect: 'follow'
   };
    
   const data = await fetch(urlStr, requestOptions)
-    .then(response => response.text())
+    .then(response => response.json())
     .then(result => {
-      return JSON.parse(result);
+      console.log('✅ Search results:', result);
+      return result;
     })
-    .catch(error => console.log('error', error));
+    .catch(error => {
+      console.log('❌ Search error:', error);
+      return null;
+    });
+
+  return data;
+}
+
+async function searchIMDbSuggestion(query){
+  console.log('🔍 Searching IMDb suggestions for:', query);
+  // Use IMDb's suggestion API which separates people from titles
+  const urlStr = `https://v3.sg.media-imdb.com/suggestion/x/${encodeURIComponent(query.toLowerCase().replace(/\s+/g, '_'))}.json`;
+  const requestOptions = {
+    method: 'GET',
+    redirect: 'follow'
+  };
+   
+  const data = await fetch(urlStr, requestOptions)
+    .then(response => response.json())
+    .then(result => {
+      console.log('✅ Suggestion results:', result);
+      return result;
+    })
+    .catch(error => {
+      console.log('❌ Suggestion error:', error);
+      return null;
+    });
+
+  return data;
+}
+
+async function getActorFilmography(imdbId){
+  console.log('🎬 Getting filmography for actor:', imdbId);
+  
+  const filmography = [];
+  let nextPageToken = null;
+  let pageCount = 0;
+  const maxPages = 50; // Limit to prevent infinite loops
+  
+  try {
+    do {
+      pageCount++;
+      const apiUrl = nextPageToken 
+        ? `${IMDB_API_BASE}/names/${imdbId}/filmography?pageSize=50&pageToken=${encodeURIComponent(nextPageToken)}`
+        : `${IMDB_API_BASE}/names/${imdbId}/filmography?pageSize=50`;
+      
+      const urlStr = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow'
+      };
+      
+      console.log(`📄 Fetching page ${pageCount}...`);
+      
+      // Add delay between requests to avoid rate limiting (except for first request)
+      if (pageCount > 1) {
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      }
+      
+      const response = await fetch(urlStr, requestOptions);
+      console.log('📡 Response status:', response.status);
+      
+      // Check for rate limit
+      if (response.status === 429) {
+        console.log('⚠️ Rate limit hit, stopping pagination');
+        break;
+      }
+      
+      const result = await response.json();
+      
+      // Process filmography data from API
+      if (result && result.credits) {
+        console.log('📊 Found credits on this page:', result.credits.length);
+        
+        result.credits.forEach(credit => {
+          if (credit.title && credit.title.id && credit.title.primaryTitle) {
+            filmography.push({
+              id: credit.title.id,
+              title: credit.title.primaryTitle,
+              year: credit.title.releaseYear || '',
+              description: credit.characters ? credit.characters.join(', ') : credit.title.primaryTitle,
+              role: 'Actor'
+            });
+          }
+        });
+      }
+      
+      // Get next page token
+      nextPageToken = result.nextPageToken || null;
+      
+      // Continue if there's more data
+    } while (nextPageToken && pageCount < maxPages);
+    
+    console.log(`✅ Extracted filmography: ${filmography.length} titles across ${pageCount} pages`);
+    
+    return {
+      castMovies: filmography
+    };
+  } catch (error) {
+    console.log('❌ Filmography error:', error);
+    return { castMovies: filmography }; // Return what we got so far
+  }
+}
+
+async function getTitleCast(imdbId){
+  console.log('🎭 Getting cast for title:', imdbId);
+  const apiUrl = `${IMDB_API_BASE}/titles/${imdbId}/credits`;
+  const urlStr = `${PROXY_URL}?url=${encodeURIComponent(apiUrl)}`;
+  const requestOptions = {
+    method: 'GET',
+    redirect: 'follow'
+  };
+   
+  const data = await fetch(urlStr, requestOptions)
+    .then(response => {
+      console.log('📡 Response status:', response.status);
+      return response.json();
+    })
+    .then(result => {
+      console.log('📄 Received cast data:', result);
+      
+      const cast = [];
+      
+      // Process cast data from API
+      if (result && result.credits && result.credits.cast) {
+        console.log('📊 Found cast members:', result.credits.cast.length);
+        
+        result.credits.cast.forEach(member => {
+          if (member.id && member.name) {
+            cast.push({
+              id: member.id,
+              name: member.name,
+              asCharacter: member.characters ? member.characters.join(', ') : member.name
+            });
+          }
+        });
+      }
+      
+      console.log('✅ Extracted cast:', cast.length, 'actors');
+      return {
+        actors: cast
+      };
+    })
+    .catch(error => {
+      console.log('❌ Cast error:', error);
+      return { actors: [] };
+    });
 
   return data;
 }
@@ -154,35 +305,93 @@ const TitleForm = (props) => {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    console.log('🚀 TITLE COMPARISON STARTED');
+    console.log('Title 1:', title1.current.value);
+    console.log('Title 2:', title2.current.value);
     setNewItem(false);
     setFound1(false);
     setFound2(false);
-    // console.log('submit', title1.current.value, title2.current.value)
-    const title1Search = fetchData('https://imdb-api.com/en/API/SearchTitle', title1.current.value);
+    
+    const title1Search = searchIMDbSuggestion(title1.current.value);
     title1Search.then(data => {
-      const title1ID = data.results[0].id;
-      const title1Values = fetchData('https://imdb-api.com/en/API/FullCast', title1ID).then(data => {
-        if(data){
-          resp.title1 = data;
+      console.log('📥 Title 1 search complete');
+      if (data && data.d && data.d.length > 0) {
+        // Filter for title results (movies/shows)
+        const titleResults = data.d.filter(item => 
+          item.id && item.id.startsWith('tt')
+        );
+        
+        console.log('🎬 Found', titleResults.length, 'title results');
+        
+        if (titleResults.length > 0) {
+          const title1ID = titleResults[0].id;
+          const title1Title = titleResults[0].l;
+          console.log('🎬 Found Title 1:', title1Title, '(', title1ID, ')');
+          getTitleCast(title1ID).then(castData => {
+            if(castData && castData.actors){
+              resp.title1 = {
+                ...castData,
+                title: title1Title,
+                imdbID: title1ID
+              };
+              console.log('✅ Title 1 complete. Cast:', castData.actors.length, 'actors');
+            } else {
+              resp.title1 = { actors: [], title: title1Title };
+              console.log('⚠️ Title 1: No cast data found');
+            }
+            setFound1(true);
+          })
         } else {
-          resp.title1 = '';
+          resp.title1 = { actors: [], title: '' };
+          console.log('⚠️ Title 1: No title results');
+          setFound1(true);
         }
+      } else {
+        resp.title1 = { actors: [], title: '' };
+        console.log('⚠️ Title 1: No search results');
         setFound1(true);
-      })
+      }
     })
 
-    const title2Search = fetchData('https://imdb-api.com/en/API/SearchTitle', title2.current.value);
+    const title2Search = searchIMDbSuggestion(title2.current.value);
     title2Search.then(data => {
-      
-      const title2ID = data.results[0].id;
-      const title2Values = fetchData('https://imdb-api.com/en/API/FullCast', title2ID).then(data => {
-        if(data){
-          resp.title2 = data;
+      console.log('📥 Title 2 search complete');
+      if (data && data.d && data.d.length > 0) {
+        // Filter for title results (movies/shows)
+        const titleResults = data.d.filter(item => 
+          item.id && item.id.startsWith('tt')
+        );
+        
+        console.log('🎬 Found', titleResults.length, 'title results');
+        
+        if (titleResults.length > 0) {
+          const title2ID = titleResults[0].id;
+          const title2Title = titleResults[0].l;
+          console.log('🎬 Found Title 2:', title2Title, '(', title2ID, ')');
+          getTitleCast(title2ID).then(castData => {
+            if(castData && castData.actors){
+              resp.title2 = {
+                ...castData,
+                title: title2Title,
+                imdbID: title2ID
+              };
+              console.log('✅ Title 2 complete. Cast:', castData.actors.length, 'actors');
+            } else {
+              resp.title2 = { actors: [], title: title2Title };
+              console.log('⚠️ Title 2: No cast data found');
+            }
+            setFound2(true);
+          })
         } else {
-          resp.title2 = '';
+          resp.title2 = { actors: [], title: '' };
+          console.log('⚠️ Title 2: No title results');
+          setFound2(true);
         }
+      } else {
+        resp.title2 = { actors: [], title: '' };
+        console.log('⚠️ Title 2: No search results');
         setFound2(true);
-      })
+      }
     })
   }
 
@@ -271,26 +480,97 @@ const ActorForm = (props) => {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    console.log('🚀 ACTOR COMPARISON STARTED');
+    console.log('Actor 1:', actor1.current.value);
+    console.log('Actor 2:', actor2.current.value);
     setNewItem(false);
     setFound1(false);
     setFound2(false);
-    const actor1Search = fetchData('https://imdb-api.com/en/API/SearchName', actor1.current.value);
+    
+    // Use suggestion API which better identifies people vs titles
+    const actor1Search = searchIMDbSuggestion(actor1.current.value);
     actor1Search.then(data => {
-      const actor1ID = getMostSimilarId(actor1.current.value, data.results);
-      const actor1Values = fetchData('https://imdb-api.com/en/API/Name', actor1ID).then(data => {
-        resp.actor1 = data;
+      console.log('📥 Actor 1 search complete');
+      if (data && data.d && data.d.length > 0) {
+        // Filter for person results (they have 'qid' property or lack 'q' for title type)
+        const personResults = data.d.filter(item => 
+          item.id && item.id.startsWith('nm')
+        );
+        
+        console.log('👤 Found', personResults.length, 'person results for Actor 1');
+        console.log('👤 Person results:', personResults);
+        
+        if (personResults.length > 0) {
+          // Get best match
+          const actor1ID = getMostSimilarId(actor1.current.value, personResults.map(p => ({
+            id: p.id,
+            title: p.l || p.name
+          })));
+          
+          console.log('🎯 Best match Actor 1:', actor1ID);
+          
+          getActorFilmography(actor1ID).then(filmData => {
+            const actorName = personResults.find(p => p.id === actor1ID)?.l || personResults.find(p => p.id === actor1ID)?.name || actor1.current.value;
+            resp.actor1 = {
+              ...filmData,
+              name: actorName,
+              imdbID: actor1ID
+            };
+            console.log('✅ Actor 1 complete:', actorName, '-', filmData.castMovies.length, 'films');
+            setFound1(true);
+          });
+        } else {
+          resp.actor1 = { castMovies: [], name: actor1.current.value };
+          console.log('⚠️ Actor 1: No person results');
+          setFound1(true);
+        }
+      } else {
+        resp.actor1 = { castMovies: [], name: actor1.current.value };
+        console.log('⚠️ Actor 1: No search results');
         setFound1(true);
-      })
+      }
     })
 
-    const actor2Search = fetchData('https://imdb-api.com/en/API/SearchName', actor2.current.value);
+    const actor2Search = searchIMDbSuggestion(actor2.current.value);
     actor2Search.then(data => {
-      const actor2ID = getMostSimilarId(actor2.current.value, data.results);
-      console.log(actor2ID)
-      const actor2Values = fetchData('https://imdb-api.com/en/API/Name', actor2ID).then(data => {
-        resp.actor2 = data;
+      console.log('📥 Actor 2 search complete');
+      if (data && data.d && data.d.length > 0) {
+        // Filter for person results
+        const personResults = data.d.filter(item => 
+          item.id && item.id.startsWith('nm')
+        );
+        
+        console.log('👤 Found', personResults.length, 'person results for Actor 2');
+        console.log('👤 Person results:', personResults);
+        
+        if (personResults.length > 0) {
+          const actor2ID = getMostSimilarId(actor2.current.value, personResults.map(p => ({
+            id: p.id,
+            title: p.l || p.name
+          })));
+          
+          console.log('🎯 Best match Actor 2:', actor2ID);
+          
+          getActorFilmography(actor2ID).then(filmData => {
+            const actorName = personResults.find(p => p.id === actor2ID)?.l || personResults.find(p => p.id === actor2ID)?.name || actor2.current.value;
+            resp.actor2 = {
+              ...filmData,
+              name: actorName,
+              imdbID: actor2ID
+            };
+            console.log('✅ Actor 2 complete:', actorName, '-', filmData.castMovies.length, 'films');
+            setFound2(true);
+          });
+        } else {
+          resp.actor2 = { castMovies: [], name: actor2.current.value };
+          console.log('⚠️ Actor 2: No person results');
+          setFound2(true);
+        }
+      } else {
+        resp.actor2 = { castMovies: [], name: actor2.current.value };
+        console.log('⚠️ Actor 2: No search results');
         setFound2(true);
-      })
+      }
     })
   }
 

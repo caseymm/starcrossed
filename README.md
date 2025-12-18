@@ -1,3 +1,26 @@
+# Star Crossed - IMDb Actor & Title Comparison Tool
+
+This app allows you to compare actors and titles from IMDb to find shared cast members and filmographies.
+
+## Recent Updates
+
+**December 2025**: Updated to use the free IMDb API from [imdbapi.dev](https://imdbapi.dev/) after the previous API service was discontinued.
+
+## Features
+
+- **Compare Actors**: Find movies/shows where two actors have worked together
+- **Compare Titles**: Find actors who appeared in two different movies/shows
+
+## API Information
+
+This app uses the following free IMDb API endpoints:
+- Search API: `https://search.imdbot.workers.dev/`
+- HTML scraping API: `https://html.imdbot.workers.dev/`
+
+No API key required!
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
